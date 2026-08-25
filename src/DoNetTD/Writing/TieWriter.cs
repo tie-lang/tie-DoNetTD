@@ -107,7 +107,7 @@ internal sealed class TieWriter
             return;
         }
 
-        WriteEntries(array.Count, i => WriteValue(array[i]));
+        WriteEntries(array.Count, i => array[i], i => WriteValue(array[i]));
     }
 
     private void WriteTable(TieTable table)
@@ -124,6 +124,7 @@ internal sealed class TieWriter
 
         var materialized = new List<KeyValuePair<string, TieValue>>(entries);
         WriteEntries(materialized.Count,
+            i => materialized[i].Value,
             i =>
             {
                 var kv = materialized[i];
@@ -132,16 +133,30 @@ internal sealed class TieWriter
             });
     }
 
-    /// <summary>容器条目的统一排版：美化多行缩进+逗号策略 / 紧凑单行。</summary>
-    private void WriteEntries(int count, Action<int> writeEntry)
+    /// <summary>
+    /// 容器条目的统一排版：美化多行缩进+逗号策略 / 紧凑单行。
+    /// PreserveComments 开启且 Pretty 时，逐条还原前导注释（各行独立）与尾随注释（值后同行）。
+    /// </summary>
+    private void WriteEntries(int count, Func<int, TieValue?>? nodeForComments, Action<int> writeEntry)
     {
         _sb.Append('[');
 
         if (_opt.Pretty)
         {
+            bool comments = _opt.PreserveComments;
             _depth++;
             for (int i = 0; i < count; i++)
             {
+                TieValue? node = comments ? nodeForComments?.Invoke(i) : null;
+                if (node is not null)
+                {
+                    foreach (var c in node.LeadingComments)
+                    {
+                        _sb.Append('\n');
+                        AppendIndent(_depth);
+                        _sb.Append("// ").Append(c);
+                    }
+                }
                 _sb.Append('\n');
                 AppendIndent(_depth);
                 writeEntry(i);
@@ -149,6 +164,12 @@ internal sealed class TieWriter
                 if (!isLast || _opt.TrailingComma)
                 {
                     _sb.Append(',');
+                }
+                // 尾随注释在分隔符之后（官方样例风格："threads": 0,  // 注释），
+                // 且保证重解析时注释文本不会吞进分隔符。
+                if (node?.TrailingComment is string trailing)
+                {
+                    _sb.Append("  // ").Append(trailing);
                 }
             }
             _depth--;

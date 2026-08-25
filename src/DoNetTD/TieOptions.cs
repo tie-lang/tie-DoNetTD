@@ -18,6 +18,16 @@ public sealed class TieParseOptions
     /// <summary>容器最大嵌套深度，超过报「嵌套过深」；默认 256。</summary>
     public int MaxDepth { get; set; } = 256;
 
+    /// <summary>
+    /// 收集全部错误而非首个即停。开启后解析器在容器条目级做恢复与重同步，
+    /// 最终以 <see cref="TieParseException"/> 抛出完整诊断列表（类似编译器的批量报错）。
+    /// 默认 false。
+    /// </summary>
+    public bool CollectAllErrors { get; set; }
+
+    /// <summary>收集模式下的错误数上限，超过即中止（防病态输入拖死）；默认 100。</summary>
+    public int MaxErrors { get; set; } = 100;
+
     /// <summary>共享默认选项实例。</summary>
     public static TieParseOptions Default { get; } = new TieParseOptions();
 }
@@ -42,4 +52,10 @@ public sealed class TieWriteOptions
 
     /// <summary>纯标量数组压成一行输出（如 ["a", "b", "c"]）；默认 false。仅 Pretty 模式生效。</summary>
     public bool CompactArraysOfScalars { get; set; }
+
+    /// <summary>
+    /// 还原节点上挂载的注释（前导逐行输出、尾随跟在值后）。仅 Pretty 模式生效；
+    /// 紧凑模式天然丢弃注释。默认 false。
+    /// </summary>
+    public bool PreserveComments { get; set; }
 }

@@ -6,22 +6,53 @@ namespace DoNetTD;
 /// <summary>
 /// tie:data 文档节点的抽象基类。所有节点都是可变引用类型；
 /// 结构相等通过 <see cref="Equals(object)"/> 递归比较（表按键集合比较、数组按序比较、
-/// 整数按数值比较不区分后缀）。
+/// 整数按数值比较不区分后缀）。可挂载源码注释（前导/尾随），注释不参与结构相等。
 /// </summary>
 public abstract class TieValue
 {
+    private List<string>? _leadingComments;
+
     /// <summary>节点种类。</summary>
     public abstract TieValueKind Kind { get; }
 
     /// <summary>共享的空值单例。</summary>
     public static TieNull Null => TieNull.Instance;
 
-    /// <summary>深拷贝当前子树（返回的新节点与本节点 Equals 相等）。</summary>
-    public abstract TieValue Clone();
+    /// <summary>
+    /// 前导注释列表（每项为不含 "//" 前缀的注释文本）。
+    /// 解析自值上方紧邻的行注释；写出时在值之前逐行还原。
+    /// </summary>
+    public IList<string> LeadingComments => _leadingComments ??= new List<string>();
+
+    /// <summary>尾随注释（同行跟在值后的单个行注释，不含 "//" 前缀）；无则为 null。</summary>
+    public string? TrailingComment { get; set; }
+
+    /// <summary>该节点是否挂有注释。</summary>
+    public bool HasComments => _leadingComments is { Count: > 0 } || TrailingComment is not null;
+
+    /// <summary>深拷贝当前子树（返回的新节点与本节点 Equals 相等，注释一并拷贝）。</summary>
+    public TieValue Clone()
+    {
+        var copy = CloneCore();
+        if (_leadingComments is { Count: > 0 })
+        {
+            var list = copy._leadingComments ??= new List<string>(_leadingComments.Count);
+            foreach (var c in _leadingComments)
+            {
+                list.Add(c);
+            }
+        }
+        copy.TrailingComment = TrailingComment;
+        return copy;
+    }
+
+    /// <summary>Clone 的子类实现点：只负责复制节点数据，注释由基类统一拷贝。</summary>
+    protected abstract TieValue CloneCore();
 
     /// <summary>
     /// 结构相等：递归比较。整数只比数值（42i32 与 42i64 相等）；
     /// 表按键集合+各键值比较（与插入顺序无关）；数组逐元素按序比较。
+    /// 注释不参与相等判断。
     /// </summary>
     public abstract override bool Equals(object? obj);
 

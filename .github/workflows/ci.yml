@@ -27,9 +27,9 @@ jobs:
         run: dotnet test --no-build -c Release --logger "trx" --results-directory TestResults
       - name: Pack (Windows only)
         if: matrix.os == 'windows-latest'
-        run: dotnet pack src/DoNetTD/DoNetTD.csproj -c Release -o dist --no-build
+        run: dotnet pack -c Release -o dist --no-build
       - uses: actions/upload-artifact@v4
         if: matrix.os == 'windows-latest'
         with:
-          name: nuget-package
+          name: nuget-packages
           path: dist/*.nupkg

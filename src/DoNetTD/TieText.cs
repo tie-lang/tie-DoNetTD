@@ -19,7 +19,7 @@ public sealed class TieString : TieValue
     public override TieValueKind Kind => TieValueKind.String;
 
     /// <inheritdoc />
-    public override TieValue Clone() => new TieString(Value);
+    protected override TieValue CloneCore() => new TieString(Value);
 
     /// <inheritdoc />
     public override bool Equals(object? obj) => obj is TieString s && s.Value == Value;
@@ -57,7 +57,7 @@ public sealed class TieChar : TieValue
     public override TieValueKind Kind => TieValueKind.Char;
 
     /// <inheritdoc />
-    public override TieValue Clone() => new TieChar(Codepoint);
+    protected override TieValue CloneCore() => new TieChar(Codepoint);
 
     /// <summary>转为单字符字符串（可能长 1-2 个 UTF-16 单元）。</summary>
     public string AsString() => char.ConvertFromUtf32(Codepoint);

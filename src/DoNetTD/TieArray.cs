@@ -66,7 +66,7 @@ public sealed class TieArray : TieValue, IEnumerable<TieValue>
     public void Clear() => _items.Clear();
 
     /// <inheritdoc />
-    public override TieValue Clone()
+    protected override TieValue CloneCore()
     {
         var copy = new TieArray();
         foreach (var item in _items)

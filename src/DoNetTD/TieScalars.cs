@@ -17,7 +17,7 @@ public sealed class TieNull : TieValue
     public override TieValueKind Kind => TieValueKind.Null;
 
     /// <inheritdoc />
-    public override TieValue Clone() => Instance;
+    protected override TieValue CloneCore() => Instance;
 
     /// <inheritdoc />
     public override bool Equals(object? obj) => obj is TieNull;
@@ -48,7 +48,7 @@ public sealed class TieBool : TieValue
     public override TieValueKind Kind => TieValueKind.Bool;
 
     /// <inheritdoc />
-    public override TieValue Clone() => new TieBool(Value);
+    protected override TieValue CloneCore() => new TieBool(Value);
 
     /// <inheritdoc />
     public override bool Equals(object? obj) => obj is TieBool b && b.Value == Value;
@@ -93,7 +93,7 @@ public sealed class TieTrit : TieValue
     public override TieValueKind Kind => TieValueKind.Trit;
 
     /// <inheritdoc />
-    public override TieValue Clone() => new TieTrit(Value);
+    protected override TieValue CloneCore() => new TieTrit(Value);
 
     /// <inheritdoc />
     public override bool Equals(object? obj) => obj is TieTrit t && t.Value == Value;

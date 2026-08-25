@@ -23,6 +23,16 @@ internal sealed class TieParser
     private int _col = 1;
     private bool _hasDataHeader;
 
+    // CollectAllErrors：累计诊断（快照随每次抛出携带）。
+    private readonly List<TieDiagnostic> _errors = new List<TieDiagnostic>();
+    private bool _capNoted;
+
+    // 注释捕获：值上方紧邻的行注释先入 pending，值解析完成后统一挂为前导；
+    // 与最近完成值同行的行注释直接挂为该值的尾随。
+    private readonly List<string> _pendingLeading = new List<string>();
+    private TieValue? _lastValue;
+    private int _lastValueEndLine = -1;
+
     private TieParser(string normalized, TieParseOptions options)
     {
         _s = normalized;
@@ -50,17 +60,36 @@ internal sealed class TieParser
         }
 
         SkipTrivia();
-        var root = ParseValue(0);
+        TieValue root;
+        try
+        {
+            root = ParseValue(0);
+        }
+        catch (TieParseException) when (_opt.CollectAllErrors)
+        {
+            // 根值失败：吞掉异常继续收集（文档已无有效根，最终统一抛出）。
+            while (!Eof)
+            {
+                Advance();
+            }
+            root = TieNull.Instance;
+        }
 
         SkipTrivia();
         if (!Eof)
         {
-            Fail("文档根值之后有多余内容");
+            Report("文档根值之后有多余内容");
         }
 
         if (!_opt.AllowScalarRoot && root.Kind != TieValueKind.Array && root.Kind != TieValueKind.Table)
         {
-            Fail("tie:data 根值必须是表或数组（当前 AllowScalarRoot=false）");
+            Report("tie:data 根值必须是表或数组（当前 AllowScalarRoot=false）");
+        }
+
+        // 收集模式：有错误则整体失败并携带完整诊断列表；宽容模式在 Report 内已抛。
+        if (_opt.CollectAllErrors && _errors.Count > 0)
+        {
+            throw new TieParseException(new List<TieDiagnostic>(_errors));
         }
 
         return new TieDocument(root, _hasDataHeader);
@@ -158,9 +187,23 @@ internal sealed class TieParser
             }
             else if (c == '/' && PeekAt(1) == '/')
             {
+                int commentLine = _line;
+                Advance();
+                Advance();
+                int start = _pos;
                 while (!Eof && Peek != '\n')
                 {
                     Advance();
+                }
+                var text = _s.Substring(start, _pos - start).Trim();
+                // 同行紧跟最近完成值 → 尾随注释；否则挂起为下一值的前导。
+                if (_lastValue is not null && commentLine == _lastValueEndLine && _pendingLeading.Count == 0)
+                {
+                    _lastValue.TrailingComment = text;
+                }
+                else
+                {
+                    _pendingLeading.Add(text);
                 }
             }
             else
@@ -196,14 +239,72 @@ internal sealed class TieParser
         return true;
     }
 
+    /// <summary>
+    /// 统一错误出口：宽容模式立即抛首个错误；收集模式记入 _errors 后同样以异常
+    /// 作为控制流交由容器循环捕获恢复（诊断已在列表里，最终统一抛出）。
+    /// </summary>
     private void Fail(string message)
     {
-        throw TieParseException.Single(message, _line, _col, _pos);
+        if (!_opt.CollectAllErrors)
+        {
+            throw TieParseException.Single(message, _line, _col, _pos);
+        }
+        RecordError(message);
+        throw new TieParseException(new List<TieDiagnostic>(_errors));
+    }
+
+    /// <summary>仅记录一条错误（不抛出）。供收集模式的根级路径使用。</summary>
+    private void Report(string message) => Fail(message);
+
+    private void RecordError(string message)
+    {
+        if (_errors.Count >= _opt.MaxErrors)
+        {
+            if (!_capNoted)
+            {
+                _capNoted = true;
+                _errors.Add(new TieDiagnostic(TieDiagnosticSeverity.Error,
+                    $"错误超过 {_opt.MaxErrors} 个，停止收集", _line, _col, _pos));
+            }
+            return;
+        }
+        _errors.Add(new TieDiagnostic(TieDiagnosticSeverity.Error, message, _line, _col, _pos));
+    }
+
+    /// <summary>错误恢复：跳过字符直到条目分隔符（','）、容器闭合（']'）或 EOF。</summary>
+    private void Resync()
+    {
+        while (!Eof)
+        {
+            char c = Peek;
+            if (c == ',' || c == ']')
+            {
+                return;
+            }
+            Advance();
+        }
     }
 
     // ---------- 值解析 ----------
 
+    /// <summary>
+    /// 解析一个值并完成注释挂载：挂起的前导注释落到该值上，
+    /// 同时把它登记为「最近完成值」供同行尾随注释归属。
+    /// </summary>
     private TieValue ParseValue(int depth)
+    {
+        var v = ParseValueCore(depth);
+        foreach (var c in _pendingLeading)
+        {
+            v.LeadingComments.Add(c);
+        }
+        _pendingLeading.Clear();
+        _lastValue = v;
+        _lastValueEndLine = _line;
+        return v;
+    }
+
+    private TieValue ParseValueCore(int depth)
     {
         SkipTrivia();
         if (Eof)
@@ -342,7 +443,21 @@ internal sealed class TieParser
             }
             Advance(); // ':'
 
-            var value = ParseValue(depth);
+            TieValue value;
+            try
+            {
+                value = ParseValue(depth);
+            }
+            catch (TieParseException) when (_opt.CollectAllErrors)
+            {
+                // 条目级恢复：跳到分隔/闭合符继续收集后续错误。
+                Resync();
+                if (!Eof && Peek == ',')
+                {
+                    Advance();
+                }
+                continue;
+            }
 
             if (table.ContainsKey(key))
             {
@@ -381,7 +496,21 @@ internal sealed class TieParser
                 return array;
             }
 
-            array.Add(ParseValue(depth));
+            TieValue item;
+            try
+            {
+                item = ParseValue(depth);
+            }
+            catch (TieParseException) when (_opt.CollectAllErrors)
+            {
+                Resync();
+                if (!Eof && Peek == ',')
+                {
+                    Advance();
+                }
+                continue;
+            }
+            array.Add(item);
 
             SkipTrivia();
             if (Peek == ',')

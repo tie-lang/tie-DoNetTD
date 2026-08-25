@@ -142,7 +142,7 @@ public sealed class TieTable : TieValue
     }
 
     /// <inheritdoc />
-    public override TieValue Clone()
+    protected override TieValue CloneCore()
     {
         var copy = new TieTable();
         foreach (var kv in Items)

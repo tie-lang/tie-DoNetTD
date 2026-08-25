@@ -31,7 +31,7 @@ public sealed class TieInteger : TieValue
     public override TieValueKind Kind => TieValueKind.Integer;
 
     /// <inheritdoc />
-    public override TieValue Clone() => new TieInteger(Value, Suffix);
+    protected override TieValue CloneCore() => new TieInteger(Value, Suffix);
 
     /// <summary>取 long 值；越界抛 <see cref="OverflowException"/>。</summary>
     public long AsLong() => (long)Value;
@@ -95,7 +95,7 @@ public sealed class TieFloat : TieValue
     public override TieValueKind Kind => TieValueKind.Float;
 
     /// <inheritdoc />
-    public override TieValue Clone() => new TieFloat(Value, Suffix);
+    protected override TieValue CloneCore() => new TieFloat(Value, Suffix);
 
     /// <summary>取 float 值。</summary>
     public float AsSingle() => (float)Value;

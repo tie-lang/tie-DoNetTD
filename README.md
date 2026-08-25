@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>tie:data 的 .NET 解析库</strong><br>
-  解析 · 写入 · 创建 · 转化 · 路径查询 · 深合并 · 校验
+  解析 · 写入 · 创建 · 转化 · 路径查询 · 深合并 · 校验 · 注释保留 · 命令行工具
 </p>
 
 [![ci](https://github.com/TIE-LANG/tie-DoNetTD/actions/workflows/ci.yml/badge.svg)](https://github.com/TIE-LANG/tie-DoNetTD/actions/workflows/ci.yml)
@@ -10,7 +10,11 @@
 **DoNetTD** 让 .NET 应用直接读写 [tie 语言](https://github.com/TIE-LANG) 的 `type tie<data>` 数据交换格式——
 与 tiec 编译器消费的配置文件完全兼容，并完整支持语言级字面量（窄整数后缀、trit、char）。
 
-零第三方依赖；多目标 `netstandard2.0` + `net8.0`。
+| 包 | 用途 |
+|---|---|
+| `DoNetTD` | 核心库（零第三方依赖），netstandard2.0 + net8.0 |
+| `DoNetTD.Extensions.Configuration` | `IConfiguration` 配置源桥接（支持 optional / reloadOnChange） |
+| `TdcTool` | `tdc` dotnet 命令行工具（格式化/校验/互转/合并/路径存取） |
 
 ## 安装
 
@@ -141,6 +145,72 @@ System.Text.Json.Nodes.JsonNode? node = TieJsonNodeBridge.ToJsonNode(tieValue);
 TieValue back = TieJsonNodeBridge.FromJsonNode(node);
 ```
 
+## v0.2 新功能
+
+### 注释保留往返
+
+```csharp
+var doc = TieDocument.ParseFile("tie.config");
+doc.Root["opt"]!.TrailingComment;          // 解析时自动挂载（前导 LeadingComments 同理）
+doc.WriteToFile("tie.config", new TieWriteOptions { PreserveComments = true });
+// 编辑配置不丢注释——JSON 库做不到的事
+```
+
+### 环境变量插值
+
+```csharp
+using DoNetTD.Convert;
+
+// "registry": "${REG}/pkg" → 展开；$$ 为字面 $；未命中可 Keep/Empty/Error
+var expanded = TieInterpolate.Expand(doc.Root);
+```
+
+### 强类型路径（表达式树）
+
+```csharp
+using DoNetTD.Advanced;
+
+TiePath.Get(root, TiePathOf.Of((Config c) => c.Tiec.Features)); // "tiec.features"，重构安全
+TiePathOf.Set(root, (Config c) => c.Target, new TieString("linux-x64"));
+```
+
+### Schema 推导
+
+```csharp
+using DoNetTD.Schema;
+
+var schema = TieSchemaInference.InferFrom(sampleDoc.Root);   // 样例即契约
+var errors = TieSchemaValidator.Validate(otherDoc.Root, schema);
+```
+
+### 多诊断收集
+
+```csharp
+TieDocument.TryParse(text, out _, out var all,
+    new TieParseOptions { CollectAllErrors = true }); // 一次拿到全部错误（上限 100）
+```
+
+### tdc 命令行
+
+```bash
+dotnet tool install -g TdcTool
+tdc fmt tie.config -w --preserve-comments   # 格式化并保注释写回
+tdc check *.data.tie                        # 批量校验（收集全部诊断）
+tdc to-json app.data.tie -i                 # 转 JSON
+tdc from-json pkg.json --header             # 转 tie:data
+tdc merge defaults.tie profile.tie -o out   # 官方 L2 分层合并
+tdc get app.tie cache.size                  # 路径取值
+tdc set app.tie opt 3 -w                    # 路径写入
+```
+
+### 接入 .NET 通用配置
+
+```csharp
+// DoNetTD.Extensions.Configuration
+builder.Configuration.AddTieFile("tie.config", optional: true, reloadOnChange: true);
+Console.WriteLine(config["tiec:backend"]);   // 展平约定与 JSON 提供程序一致
+```
+
 ## 数据模型
 
 | 节点 | tie:data 形态 | 说明 |
@@ -166,8 +236,9 @@ TieValue back = TieJsonNodeBridge.FromJsonNode(node);
 
 ```bash
 dotnet build -c Release
-dotnet test -c Release      # 77 个测试
+dotnet test -c Release      # 94 个测试
 dotnet run --project examples/DoNetTD.Demo
+dotnet pack -c Release      # DoNetTD / Extensions.Configuration / TdcTool
 ```
 
 ## License

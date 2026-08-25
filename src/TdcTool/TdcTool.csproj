@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>TdcTool</RootNamespace>
+
+    <!-- dotnet global tool 打包 -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>tdc</ToolCommandName>
+    <PackageOutputPath>../../nupkg</PackageOutputPath>
+
+    <PackageId>TdcTool</PackageId>
+    <Version>0.2.0</Version>
+    <Authors>TIE-LANG organization</Authors>
+    <Company>TIE-LANG organization</Company>
+    <Description>tie:data 命令行工具：格式化、校验、JSON 互转、分层合并与路径存取。</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/TIE-LANG/tie-DoNetTD</RepositoryUrl>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DoNetTD\DoNetTD.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

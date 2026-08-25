@@ -3,7 +3,9 @@
     <Project Path="examples/DoNetTD.Demo/DoNetTD.Demo.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/DoNetTD.Extensions.Configuration/DoNetTD.Extensions.Configuration.csproj" />
     <Project Path="src/DoNetTD/DoNetTD.csproj" />
+    <Project Path="src/TdcTool/TdcTool.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DoNetTD.Tests/DoNetTD.Tests.csproj" />
