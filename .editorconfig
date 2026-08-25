@@ -1,0 +1,26 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cs,csproj,sln,props,targets}]
+indent_style = space
+indent_size = 4
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.{md,yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.cs]
+# IDE0055: 格式化交给 .editorconfig 统一
+dotnet_diagnostic.IDE0055.severity = suggestion
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_prefer_braces = true:suggestion
