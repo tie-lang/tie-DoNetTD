@@ -12,6 +12,8 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    env:
+      NUGET_KEY: ${{ secrets.NUGET_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -33,10 +35,10 @@ jobs:
         run: dotnet pack --no-build -c Release -o dist -p:ContinuousIntegrationBuild=true
 
       - name: Push to NuGet.org (only when NUGET_API_KEY is configured)
-        if: ${{ secrets.NUGET_API_KEY != '' }}
+        if: env.NUGET_KEY != ''
         run: >
           dotnet nuget push "dist/*.nupkg"
-          --api-key ${{ secrets.NUGET_API_KEY }}
+          --api-key ${{ env.NUGET_KEY }}
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
 
