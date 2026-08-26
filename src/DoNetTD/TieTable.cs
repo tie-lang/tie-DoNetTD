@@ -61,10 +61,11 @@ public sealed class TieTable : TieValue
         }
     }
 
-    /// <summary>设置条目：已存在则替换值（保持原插入位置），否则追加到末尾。</summary>
+    /// <summary>设置条目：已存在则替换值（保持原插入位置），否则追加到末尾。冻结子树不可修改。</summary>
     public void Set(string key, TieValue value)
     {
         KeyGuard(key);
+        EnsureMutable();
         if (value is null) throw new ArgumentNullException(nameof(value), "写入 null 请用 this[key] = null 移除，或显式使用 TieValue.Null");
         if (_map.ContainsKey(key))
         {
@@ -91,10 +92,11 @@ public sealed class TieTable : TieValue
         return ok;
     }
 
-    /// <summary>移除条目：存在返回 true。</summary>
+    /// <summary>移除条目：存在返回 true。冻结子树不可修改。</summary>
     public bool Remove(string key)
     {
         KeyGuard(key);
+        EnsureMutable();
         if (!_map.Remove(key)) return false;
         _order.Remove(key);
         return true;
@@ -134,11 +136,21 @@ public sealed class TieTable : TieValue
         }
     }
 
-    /// <summary>清空全部条目。</summary>
+    /// <summary>清空全部条目。冻结子树不可修改。</summary>
     public void Clear()
     {
+        EnsureMutable();
         _order.Clear();
         _map.Clear();
+    }
+
+    /// <inheritdoc />
+    protected override void FreezeChildren()
+    {
+        foreach (var kv in _map.Values)
+        {
+            kv.Freeze();
+        }
     }
 
     /// <inheritdoc />

@@ -19,7 +19,7 @@ public enum MissingVarBehavior
 /// <summary>
 /// 字符串环境变量插值：把 tie:data 树中字符串里的 ${VAR} 展开为环境变量值。
 /// - $$ 转义为字面 $；${VAR} 取变量；
-/// - 默认读进程环境变量，可用 <paramref name="variables"/> 覆盖（值优先）；
+/// - 默认读进程环境变量，可用自定义变量表覆盖（值优先）；
 /// - 返回新树，不修改入参。
 /// </summary>
 public static class TieInterpolate

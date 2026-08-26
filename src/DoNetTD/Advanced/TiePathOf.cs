@@ -52,7 +52,12 @@ public static class TiePathOf
         {
             // 跳过最外层的文档参数本身（c => c.A.B 中 c 是根）。
             segments.Add(MapName(member.Member.Name));
-            body = StripConvert(member.Expression);
+            var next = member.Expression;
+            if (next is null)
+            {
+                break; // 静态成员等无实例链的情形
+            }
+            body = StripConvert(next);
         }
 
         if (segments.Count == 0)

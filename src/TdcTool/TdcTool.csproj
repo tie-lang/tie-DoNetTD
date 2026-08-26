@@ -13,7 +13,7 @@
     <PackageOutputPath>../../nupkg</PackageOutputPath>
 
     <PackageId>TdcTool</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>TIE-LANG organization</Authors>
     <Company>TIE-LANG organization</Company>
     <Description>tie:data 命令行工具：格式化、校验、JSON 互转、分层合并与路径存取。</Description>

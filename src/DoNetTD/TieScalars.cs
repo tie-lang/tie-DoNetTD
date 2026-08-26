@@ -32,8 +32,10 @@ public sealed class TieNull : TieValue
 /// <summary>布尔节点：true / false。</summary>
 public sealed class TieBool : TieValue
 {
+    private bool _value;
+
     /// <summary>布尔值。</summary>
-    public bool Value { get; set; }
+    public bool Value { get => _value; set { EnsureMutable(); _value = value; } }
 
     /// <summary>构造布尔节点。</summary>
     public TieBool(bool value) => Value = value;
@@ -67,8 +69,10 @@ public sealed class TieBool : TieValue
 /// </summary>
 public sealed class TieTrit : TieValue
 {
+    private int _value;
+
     /// <summary>三进制值：仅允许 -1、0、+1。</summary>
-    public int Value { get; set; }
+    public int Value { get => _value; set { EnsureMutable(); _value = value; } }
 
     /// <summary>构造 trit 节点；value 仅允许 -1/0/+1。</summary>
     public TieTrit(int value)

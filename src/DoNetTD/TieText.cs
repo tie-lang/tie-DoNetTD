@@ -6,13 +6,15 @@ namespace DoNetTD;
 /// <summary>字符串节点："..." 双引号字符串。内容为 UTF-16 字符串（tie 侧为 UTF-8 文本）。</summary>
 public sealed class TieString : TieValue
 {
+    private string _value = "";
+
     /// <summary>字符串内容。</summary>
-    public string Value { get; set; }
+    public string Value { get => _value; set { EnsureMutable(); _value = value ?? throw new ArgumentNullException(nameof(value)); } }
 
     /// <summary>构造字符串节点；value 不允许 null。</summary>
     public TieString(string value)
     {
-        Value = value ?? throw new ArgumentNullException(nameof(value));
+        _value = value ?? throw new ArgumentNullException(nameof(value));
     }
 
     /// <inheritdoc />
@@ -38,7 +40,9 @@ public sealed class TieString : TieValue
 public sealed class TieChar : TieValue
 {
     /// <summary>Unicode 码点值（0..0x10FFFF，不含代理区）。</summary>
-    public int Codepoint { get; set; }
+    public int Codepoint { get => _codepoint; set { EnsureMutable(); _codepoint = value; } }
+
+    private int _codepoint;
 
     /// <summary>构造字符节点；codepoint 必须是合法标量码点。</summary>
     public TieChar(int codepoint)

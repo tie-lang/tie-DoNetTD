@@ -473,7 +473,7 @@ internal sealed class TieParser
             }
 
             SkipTrivia();
-            if (Peek == ',')
+            if (!Eof && Peek == ',')
             {
                 Advance(); // 逗号可选：消费与否都继续
             }
@@ -513,7 +513,7 @@ internal sealed class TieParser
             array.Add(item);
 
             SkipTrivia();
-            if (Peek == ',')
+            if (!Eof && Peek == ',')
             {
                 Advance(); // 逗号可选
             }
@@ -751,49 +751,46 @@ internal sealed class TieParser
 
         if (isFloat)
         {
-            var fsuf = suffix switch
-            {
-                null => TieFloatSuffix.None,
-                "f32" => TieFloatSuffix.F32,
-                "f64" => TieFloatSuffix.F64,
-                _ => (TieFloatSuffix?)null,
-            };
-            if (fsuf is null)
+            TieFloatSuffix fsuf;
+            if (suffix is null) fsuf = TieFloatSuffix.None;
+            else if (suffix == "f32") fsuf = TieFloatSuffix.F32;
+            else if (suffix == "f64") fsuf = TieFloatSuffix.F64;
+            else
             {
                 Fail($"浮点后缀 \"{suffix}\" 无效（只允许 f32/f64）");
+                return TieNull.Instance; // 不可达，满足编译器与可空分析
             }
             double d;
             if (!double.TryParse(numeric, NumberStyles.Float, CultureInfo.InvariantCulture, out d))
             {
                 Fail($"无法解析浮点数 \"{numeric}\"");
             }
-            return new TieFloat(d, fsuf.Value);
+            return new TieFloat(d, fsuf);
         }
 
-        var isuf = suffix switch
+        TieIntegerSuffix isuf;
+        switch (suffix)
         {
-            null => TieIntegerSuffix.None,
-            "i8" => TieIntegerSuffix.I8,
-            "i16" => TieIntegerSuffix.I16,
-            "i32" => TieIntegerSuffix.I32,
-            "i64" => TieIntegerSuffix.I64,
-            "i128" => TieIntegerSuffix.I128,
-            "u8" => TieIntegerSuffix.U8,
-            "u16" => TieIntegerSuffix.U16,
-            "u32" => TieIntegerSuffix.U32,
-            "u64" => TieIntegerSuffix.U64,
-            "u128" => TieIntegerSuffix.U128,
-            _ => (TieIntegerSuffix?)null,
-        };
-        if (isuf is null)
-        {
-            Fail($"整数后缀 \"{suffix}\" 无效（允许 i8..i128/u8..u128）");
+            case null: isuf = TieIntegerSuffix.None; break;
+            case "i8": isuf = TieIntegerSuffix.I8; break;
+            case "i16": isuf = TieIntegerSuffix.I16; break;
+            case "i32": isuf = TieIntegerSuffix.I32; break;
+            case "i64": isuf = TieIntegerSuffix.I64; break;
+            case "i128": isuf = TieIntegerSuffix.I128; break;
+            case "u8": isuf = TieIntegerSuffix.U8; break;
+            case "u16": isuf = TieIntegerSuffix.U16; break;
+            case "u32": isuf = TieIntegerSuffix.U32; break;
+            case "u64": isuf = TieIntegerSuffix.U64; break;
+            case "u128": isuf = TieIntegerSuffix.U128; break;
+            default:
+                Fail($"整数后缀 \"{suffix}\" 无效（允许 i8..i128/u8..u128）");
+                return TieNull.Instance; // 不可达
         }
         if (!BigInteger.TryParse(numeric, NumberStyles.Integer, CultureInfo.InvariantCulture, out var big))
         {
             Fail($"无法解析整数 \"{numeric}\"");
         }
-        return new TieInteger(big, isuf.Value);
+        return new TieInteger(big, isuf);
     }
 
     // ---------- 工具 ----------

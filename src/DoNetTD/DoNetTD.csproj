@@ -10,7 +10,7 @@
 
     <!-- NuGet 包元数据 -->
     <PackageId>DoNetTD</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>TIE-LANG organization</Authors>
     <Owners>TIE-LANG organization</Owners>
     <Company>TIE-LANG organization</Company>
@@ -29,7 +29,8 @@
     <Deterministic>true</Deterministic>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <NoWarn>$(NoWarn);CS1591;CA1510;CA1720;CA1866;CA1310;CA1859</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;CA1510;CA1720;CA1866;CA1310;CA1859;CA2263</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
 
     <!-- 源链接 -->

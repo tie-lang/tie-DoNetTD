@@ -37,16 +37,23 @@ public sealed class TieArray : TieValue, IEnumerable<TieValue>
     /// <summary>元素个数。</summary>
     public int Count => _items.Count;
 
-    /// <summary>按下标读写元素；下标越界抛 ArgumentOutOfRangeException。</summary>
+    /// <summary>按下标读写元素；下标越界抛 ArgumentOutOfRangeException。冻结子树不可写。</summary>
     public TieValue this[int index]
     {
         get => _items[index];
-        set => _items[index] = value ?? throw new ArgumentNullException(nameof(value));
+        set
+        {
+            EnsureMutable();
+            _items[index] = value ?? throw new ArgumentNullException(nameof(value));
+        }
     }
 
-    /// <summary>追加元素（null 不允许，空值用 <see cref="TieValue.Null"/>）。</summary>
-    public void Add(TieValue item) =>
+    /// <summary>追加元素（null 不允许，空值用 <see cref="TieValue.Null"/>）。冻结子树不可修改。</summary>
+    public void Add(TieValue item)
+    {
+        EnsureMutable();
         _items.Add(item ?? throw new ArgumentNullException(nameof(item)));
+    }
 
     /// <summary>链式追加：返回自身，便于 new TieArray().Add(...).Add(...) 风格创建。</summary>
     public TieArray With(TieValue item)
@@ -55,15 +62,35 @@ public sealed class TieArray : TieValue, IEnumerable<TieValue>
         return this;
     }
 
-    /// <summary>在指定位置插入元素。</summary>
-    public void Insert(int index, TieValue item) =>
+    /// <summary>在指定位置插入元素。冻结子树不可修改。</summary>
+    public void Insert(int index, TieValue item)
+    {
+        EnsureMutable();
         _items.Insert(index, item ?? throw new ArgumentNullException(nameof(item)));
+    }
 
-    /// <summary>移除指定位置元素。</summary>
-    public void RemoveAt(int index) => _items.RemoveAt(index);
+    /// <summary>移除指定位置元素。冻结子树不可修改。</summary>
+    public void RemoveAt(int index)
+    {
+        EnsureMutable();
+        _items.RemoveAt(index);
+    }
 
-    /// <summary>清空全部元素。</summary>
-    public void Clear() => _items.Clear();
+    /// <summary>清空全部元素。冻结子树不可修改。</summary>
+    public void Clear()
+    {
+        EnsureMutable();
+        _items.Clear();
+    }
+
+    /// <inheritdoc />
+    protected override void FreezeChildren()
+    {
+        foreach (var item in _items)
+        {
+            item.Freeze();
+        }
+    }
 
     /// <inheritdoc />
     protected override TieValue CloneCore()

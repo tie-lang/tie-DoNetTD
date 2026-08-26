@@ -232,11 +232,45 @@ Console.WriteLine(config["tiec:backend"]);   // 展平约定与 JSON 提供程�
 - ➕ 语言级超集：窄整数/浮点后缀、指数形式、`zero`、char 字面量（官方 config 子集不含）
 - 📌 键序遵循 tie map 官方语义：strcmp（UTF-8 字节序），非 .NET Ordinal
 
-## 构建
+## v0.3 新功能
+
+### 不可变只读视图（Freeze）
+
+```csharp
+var frozen = doc.Root.Frozen();          // 深冻结整棵子树
+frozen["opt"] = 3;                       // 抛 InvalidOperationException
+frozen.Clone();                          // Clone 出的副本总是可变——修改冻结树的正规途径
+```
+
+### Diff → Patch 回放（配置漂移修复闭环）
+
+```csharp
+using DoNetTD.Advanced;
+
+var patch = TiePatch.ToPatch(TieDiff.Compare(baseline, actual)); // 补丁文档本身是合法 tie:data
+TiePatch.ApplyTo(baseline, patch);       // == actual（结构相等）
+```
+
+### TiePath 过滤器与切片
+
+```csharp
+TiePath.Get(root, "items[-1]");              // 负索引（从尾计数）
+TiePath.GetAll(root, "mixed[1..3]");         // 区间切片，左闭右开；[..2] [2..] [..] 均可
+TiePath.GetAll(root, """items[?(@.opt>1)]""");      // 数值比较 > >= < <= == !=
+TiePath.GetAll(root, """servers[?(@.on==true)]"""); // 布尔与字符串字面量
+```
+
+### 性能与质量
+
+- BenchmarkDotNet 基准套件（benchmarks/，本地 `dotnet run -c Release --project benchmarks/DoNetTD.Benchmarks`）
+- Fuzz 测试：随机文档往返幂等 + 破坏输入零崩溃（已借此修复一处 EOF 边界越界）
+- CI 覆盖率门禁：行覆盖 ≥80%，不达标即红
+
+## 构建与测试
 
 ```bash
 dotnet build -c Release
-dotnet test -c Release      # 94 个测试
+dotnet test -c Release      # 114 个测试
 dotnet run --project examples/DoNetTD.Demo
 dotnet pack -c Release      # DoNetTD / Extensions.Configuration / TdcTool
 ```

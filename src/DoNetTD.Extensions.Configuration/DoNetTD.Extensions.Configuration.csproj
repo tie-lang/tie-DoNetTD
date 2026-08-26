@@ -8,7 +8,7 @@
     <RootNamespace>DoNetTD.Extensions.Configuration</RootNamespace>
 
     <PackageId>DoNetTD.Extensions.Configuration</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>TIE-LANG organization</Authors>
     <Owners>TIE-LANG organization</Owners>
     <Company>TIE-LANG organization</Company>

@@ -11,12 +11,42 @@ namespace DoNetTD;
 public abstract class TieValue
 {
     private List<string>? _leadingComments;
+    private bool _frozen;
 
     /// <summary>节点种类。</summary>
     public abstract TieValueKind Kind { get; }
 
     /// <summary>共享的空值单例。</summary>
     public static TieNull Null => TieNull.Instance;
+
+    /// <summary>该子树是否已冻结（不可变视图）。</summary>
+    public bool IsFrozen => _frozen;
+
+    /// <summary>
+    /// 深冻结整棵子树：之后任何结构性修改（增删条目、改值、赋值）都抛
+    /// <see cref="InvalidOperationException"/>。适合跨线程共享只读快照。
+    /// 需要修改时对冻结树调用 <see cref="Clone"/>——副本总是可变的。
+    /// </summary>
+    /// <returns>自身（便于链式使用）。</returns>
+    public TieValue Freeze()
+    {
+        if (_frozen) return this;
+        _frozen = true;
+        FreezeChildren();
+        return this;
+    }
+
+    /// <summary>Freeze 的子类扩展点：继续冻结子节点。</summary>
+    protected virtual void FreezeChildren() { }
+
+    /// <summary>可变操作入口守卫。</summary>
+    private protected void EnsureMutable()
+    {
+        if (_frozen)
+        {
+            throw new InvalidOperationException("节点已冻结（不可变视图）；如需修改请先 Clone() 出可变副本");
+        }
+    }
 
     /// <summary>
     /// 前导注释列表（每项为不含 "//" 前缀的注释文本）。
@@ -68,4 +98,19 @@ public abstract class TieValue
 
     /// <summary>结构不等运算符。</summary>
     public static bool operator !=(TieValue? left, TieValue? right) => !(left == right);
+}
+
+/// <summary>TieValue 的链式便捷扩展。</summary>
+public static class TieValueExtensions
+{
+    /// <summary>
+    /// 链式冻结并保持接收者具体类型：
+    /// <c>var table = new TieTable().SetItem(...).Frozen();</c>
+    /// 之后任何修改都会抛 <see cref="InvalidOperationException"/>。
+    /// </summary>
+    public static T Frozen<T>(this T value) where T : TieValue
+    {
+        value.Freeze();
+        return value;
+    }
 }

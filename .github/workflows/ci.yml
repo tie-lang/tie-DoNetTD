@@ -24,7 +24,7 @@ jobs:
       - name: Build
         run: dotnet build --no-restore -c Release
       - name: Test
-        run: dotnet test --no-build -c Release --logger "trx" --results-directory TestResults
+        run: dotnet test --no-build -c Release -p:CollectCoverage=true -p:Threshold=80 -p:ThresholdType=line -p:ThresholdStat=total
       - name: Pack (Windows only)
         if: matrix.os == 'windows-latest'
         run: dotnet pack -c Release -o dist --no-build

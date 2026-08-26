@@ -8,14 +8,17 @@ namespace DoNetTD;
 /// <summary>整数节点：内部以 BigInteger 存储，支撑 i8..i128/u8..u128 全部窄类型。</summary>
 public sealed class TieInteger : TieValue
 {
+    private BigInteger _value;
+    private TieIntegerSuffix _suffix;
+
     /// <summary>整数值。</summary>
-    public BigInteger Value { get; set; }
+    public BigInteger Value { get => _value; set { EnsureMutable(); _value = value; } }
 
     /// <summary>
     /// 窄后缀。<see cref="TieIntegerSuffix.None"/> 表示未标注（tie 语义默认 i64），
     /// 写出时不附加后缀；显式解析到 "42i32" 时为 I32 并在写出时保留。
     /// </summary>
-    public TieIntegerSuffix Suffix { get; set; }
+    public TieIntegerSuffix Suffix { get => _suffix; set { EnsureMutable(); _suffix = value; } }
 
     /// <summary>构造整数节点（无后缀）。</summary>
     public TieInteger(BigInteger value) : this(value, TieIntegerSuffix.None) { }
@@ -23,8 +26,8 @@ public sealed class TieInteger : TieValue
     /// <summary>构造整数节点并指定窄后缀。</summary>
     public TieInteger(BigInteger value, TieIntegerSuffix suffix)
     {
-        Value = value;
-        Suffix = suffix;
+        _value = value;
+        _suffix = suffix;
     }
 
     /// <inheritdoc />
@@ -75,21 +78,34 @@ public sealed class TieInteger : TieValue
 /// <summary>浮点节点：double 存储，可带 f32/f64 后缀；无后缀按 tie 语义为 f64。</summary>
 public sealed class TieFloat : TieValue
 {
-    /// <summary>浮点值。</summary>
-    public double Value { get; set; }
+    private double _value;
+    private TieFloatSuffix _suffix;
 
-    /// <summary>窄后缀；<see cref="TieFloatSuffix.None"/> 为默认 f64。</summary>
-    public TieFloatSuffix Suffix { get; set; }
+    /// <summary>浮点值。F32 后缀的节点存储的是 float 规范化后的值（写出/相等的语义基准）。</summary>
+    public double Value { get => _value; set { EnsureMutable(); _value = Canonicalize(value, Suffix); } }
+
+    /// <summary>窄后缀；<see cref="TieFloatSuffix.None"/> 为默认 f64。切换到 F32 时立即规范化存储值。</summary>
+    public TieFloatSuffix Suffix
+    {
+        get => _suffix;
+        set { EnsureMutable(); _suffix = value; _value = Canonicalize(_value, value); }
+    }
 
     /// <summary>构造浮点节点（默认 f64）。</summary>
     public TieFloat(double value) : this(value, TieFloatSuffix.None) { }
 
-    /// <summary>构造浮点节点并指定后缀。</summary>
+    /// <summary>
+    /// 构造浮点节点并指定后缀。F32 节点会把存储值规范化为 float 精度——
+    /// 这保证 写出→重解析 的往返相等，也使 Equals 以字面量真实精度为准。
+    /// </summary>
     public TieFloat(double value, TieFloatSuffix suffix)
     {
-        Value = value;
-        Suffix = suffix;
+        _suffix = suffix;
+        _value = Canonicalize(value, suffix);
     }
+
+    private static double Canonicalize(double v, TieFloatSuffix suffix) =>
+        suffix == TieFloatSuffix.F32 ? (double)(float)v : v;
 
     /// <inheritdoc />
     public override TieValueKind Kind => TieValueKind.Float;

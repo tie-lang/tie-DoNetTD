@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/DoNetTD.Benchmarks/DoNetTD.Benchmarks.csproj" />
+  </Folder>
   <Folder Name="/examples/">
     <Project Path="examples/DoNetTD.Demo/DoNetTD.Demo.csproj" />
   </Folder>
