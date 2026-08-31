@@ -277,6 +277,7 @@ TiePath.GetAll(root, """servers[?(@.on==true)]"""); // 布尔与字符串字面�
 ### 性能与质量
 
 - BenchmarkDotNet 基准套件（benchmarks/，本地 `dotnet run -c Release --project benchmarks/DoNetTD.Benchmarks`）
+- 大文件基准（`--large` 跑多规模解析/写出；`--probe` 单发峰值内存探针）`dotnet run -c Release --project benchmarks/DoNetTD.Benchmarks -- --large --size 10`
 - Fuzz 测试：随机文档往返幂等 + 破坏输入零崩溃（已借此修复一处 EOF 边界越界）
 - CI 覆盖率门禁：行覆盖 ≥80%，不达标即红
 
