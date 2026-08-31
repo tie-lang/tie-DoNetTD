@@ -18,7 +18,7 @@
     <Company>TIE-LANG organization</Company>
     <Description>tie:data 命令行工具：格式化、校验、JSON 互转、分层合并与路径存取。</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <RepositoryUrl>https://github.com/TIE-LANG/tie-DoNetTD</RepositoryUrl>
+    <RepositoryUrl>https://github.com/tie-lang/DoNetTD</RepositoryUrl>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 

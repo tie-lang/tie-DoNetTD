@@ -19,9 +19,9 @@
     <Summary>Parse, write, create, convert and manipulate tie:data documents from .NET.</Summary>
     <PackageTags>tie;tie-lang;tiedata;data;parser;config;serialization</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <RepositoryUrl>https://github.com/TIE-LANG/tie-DoNetTD</RepositoryUrl>
+    <RepositoryUrl>https://github.com/tie-lang/DoNetTD</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://github.com/TIE-LANG/tie-DoNetTD</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/tie-lang/DoNetTD</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 

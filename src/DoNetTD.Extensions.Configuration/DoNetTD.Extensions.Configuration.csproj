@@ -15,7 +15,7 @@
     <Description>tet:data configuration provider for Microsoft.Extensions.Configuration —— 把 tie:data 文件接入 .NET 通用配置体系（IConfiguration），支持 optional/reloadOnChange。</Description>
     <PackageTags>tie;tiedata;configuration;config;extensions</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <RepositoryUrl>https://github.com/TIE-LANG/tie-DoNetTD</RepositoryUrl>
+    <RepositoryUrl>https://github.com/tie-lang/DoNetTD</RepositoryUrl>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
