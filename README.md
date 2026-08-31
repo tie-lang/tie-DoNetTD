@@ -5,7 +5,7 @@
   解析 · 写入 · 创建 · 转化 · 路径查询 · 深合并 · 校验 · 注释保留 · 命令行工具
 </p>
 
-[![ci](https://github.com/TIE-LANG/tie-DoNetTD/actions/workflows/ci.yml/badge.svg)](https://github.com/TIE-LANG/tie-DoNetTD/actions/workflows/ci.yml)
+[![ci](https://github.com/tie-lang/DoNetTD/actions/workflows/ci.yml/badge.svg)](https://github.com/tie-lang/DoNetTD/actions/workflows/ci.yml)
 
 **DoNetTD** 让 .NET 应用直接读写 [tie 语言](https://github.com/TIE-LANG) 的 `type tie<data>` 数据交换格式——
 与 tiec 编译器消费的配置文件完全兼容，并完整支持语言级字面量（窄整数后缀、trit、char）。
@@ -39,6 +39,20 @@ type tie<data>
 
 要点：表与数组都用 `[...]`，靠首个条目区分（`"key": value` 即表）；`//` 行注释；
 逗号可选、容忍尾逗号。空 `[]` 是空数组。
+
+文件顶层也支持**可选表名形态**（无 `var` 关键字）——表名可有可无，缺失自动按裸表处理：
+
+```tie
+pack = ["addr": ["addr": "127.0.0.1"]]   // 等价于裸表 `["addr": ...]`
+```
+
+写出时通过 `TieWriteOptions` 的 `EmitTableName` / `TableName` 控制，例如：
+
+```csharp
+doc.Write(new TieWriteOptions { EmitTableName = true, TableName = "cfg" }); // cfg = [...]
+```
+
+默认（`EmitTableName = false`）保持裸表 `[...]` 形态，向后兼容。
 
 ## 快速开始
 

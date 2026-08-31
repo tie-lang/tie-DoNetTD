@@ -2,6 +2,13 @@
 
 所有显著变更记录于此。格式参考 Keep a Changelog；版本遵循语义化版本。
 
+## [Unreleased]
+
+### 新增
+- **td 可选表名形态**：文件顶层支持 `identifier = [...]`（无 `var` 关键字），表名可有可无、缺失按裸表处理
+  - 解析：识别 `pack = [...]` 并把表名记录到 `TieDocument.TableName`
+  - 写出：`TieWriteOptions.EmitTableName` / `TableName` 控制输出 `name = [...]`（紧凑/美化、带头/无头均支持）；默认保持裸表 `[...]`，向后兼容
+
 ## [0.3.0] - 2026-08-26
 
 ### 新增
