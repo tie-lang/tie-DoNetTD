@@ -18,15 +18,25 @@ public sealed class TieDocument
     /// <summary>解析时是否识别到 type tie&lt;data&gt; 头部声明。</summary>
     public bool HasHeader { get; }
 
-    internal TieDocument(TieValue root, bool hasHeader)
+    /// <summary>
+    /// 解析根为表字面量时，可选的表名（如「pack = [ ... ]」中的 "pack"）；
+    /// 裸表（无标识符前缀）或数组时为 null。
+    /// </summary>
+    public string? TableName { get; }
+
+    internal TieDocument(TieValue root, bool hasHeader, string? tableName = null)
     {
         Root = root ?? throw new ArgumentNullException(nameof(root));
         HasHeader = hasHeader;
+        TableName = tableName;
     }
 
-    /// <summary>用给定根值构造文档；withHeader=true 时写出会带头部（需 Write 时 EmitHeader）。</summary>
-    public static TieDocument FromValue(TieValue root, bool withHeader = false) =>
-        new TieDocument(root, withHeader);
+    /// <summary>
+    /// 用给定根值构造文档；withHeader=true 时写出会带头部（需 Write 时 EmitHeader）。
+    /// tableName 支持 td 可选表名形态，默认 null（裸表）。
+    /// </summary>
+    public static TieDocument FromValue(TieValue root, bool withHeader = false, string? tableName = null) =>
+        new TieDocument(root, withHeader, tableName);
 
     // ---------- 解析 ----------
 

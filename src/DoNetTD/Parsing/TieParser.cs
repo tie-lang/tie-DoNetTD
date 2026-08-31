@@ -22,6 +22,7 @@ internal sealed class TieParser
     private int _line = 1;
     private int _col = 1;
     private bool _hasDataHeader;
+    private string? _rootTableName;
 
     // CollectAllErrors：累计诊断（快照随每次抛出携带）。
     private readonly List<TieDiagnostic> _errors = new List<TieDiagnostic>();
@@ -92,7 +93,7 @@ internal sealed class TieParser
             throw new TieParseException(new List<TieDiagnostic>(_errors));
         }
 
-        return new TieDocument(root, _hasDataHeader);
+        return new TieDocument(root, _hasDataHeader, _rootTableName);
     }
 
     // ---------- 头部识别 ----------
@@ -316,12 +317,17 @@ internal sealed class TieParser
         char c = Peek;
 
         // td 可选表名形态：文件顶层允许 「identifier = [ ... ]」（无 var 关键字）。
-        // 仅在识别到「标识符 + = + [」时才整体消费；否则不消费任何字符，
+        // 仅当识别到「标识符 + = + [」时才整体消费并记录表名；否则不消费任何字符，
         // 交由下方普通标识符/关键字路径处理（裸表、true/false/zero、数字等不受影响）。
-        if (depth == 0 && (char.IsLetter(c) || c == '_') && ConsumeOptionalTablePrefix())
+        if (depth == 0 && (char.IsLetter(c) || c == '_'))
         {
-            SkipTrivia();
-            return ParseContainer(depth); // 当前字符必为 '['
+            var tableName = ConsumeOptionalTablePrefix();
+            if (tableName is not null)
+            {
+                _rootTableName = tableName;
+                SkipTrivia();
+                return ParseContainer(depth); // 当前字符必为 '['
+            }
         }
 
         switch (c)
@@ -355,30 +361,31 @@ internal sealed class TieParser
 
     /// <summary>
     /// 尝试消费 td 可选表名前缀「标识符 + '=' + '['」。仅当标识符后（跳过空白）是 '='
-    /// 且 '=' 后（跳过空白）紧跟表字面量 '[' 时视为表名形态并消费；否则回退到调用前位置
-    /// 返回 false，由普通路径处理。调用点保证当前字符为字母或下划线。
+    /// 且 '=' 后（跳过空白）紧跟表字面量 '[' 时视为表名形态并消费，返回表名；
+    /// 否则回退到调用前位置返回 null，由普通路径处理。调用点保证当前字符为字母或下划线。
     /// </summary>
-    private bool ConsumeOptionalTablePrefix()
+    private string? ConsumeOptionalTablePrefix()
     {
         int savePos = _pos, saveLine = _line, saveCol = _col;
         while (!Eof && (char.IsLetterOrDigit(Peek) || Peek == '_'))
         {
             Advance();
         }
+        var name = _s.Substring(savePos, _pos - savePos);
         SkipTrivia();
         if (Eof || Peek != '=')
         {
             _pos = savePos; _line = saveLine; _col = saveCol;
-            return false;
+            return null;
         }
         Advance(); // '='
         SkipTrivia();
         if (Eof || Peek != '[')
         {
             _pos = savePos; _line = saveLine; _col = saveCol;
-            return false;
+            return null;
         }
-        return true;
+        return name;
     }
 
     private TieValue ParseKeyword()

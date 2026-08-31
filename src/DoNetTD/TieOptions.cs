@@ -50,6 +50,15 @@ public sealed class TieWriteOptions
     /// <summary>是否在文档开头输出 "type tie&lt;data&gt;" 头部声明；默认 false。</summary>
     public bool EmitHeader { get; set; }
 
+    /// <summary>是否输出根的可选表名前缀（如「cfg = [...]」）；默认 false。</summary>
+    public bool EmitTableName { get; set; }
+
+    /// <summary>
+    /// 写出的表名；默认 null（裸表形态）。为 null 时回退到文档自身的 <see cref="TieDocument.TableName"/>。
+    /// 仅 <see cref="EmitTableName"/> 为 true 且存在有效表名时前缀才会出现。
+    /// </summary>
+    public string? TableName { get; set; }
+
     /// <summary>纯标量数组压成一行输出（如 ["a", "b", "c"]）；默认 false。仅 Pretty 模式生效。</summary>
     public bool CompactArraysOfScalars { get; set; }
 

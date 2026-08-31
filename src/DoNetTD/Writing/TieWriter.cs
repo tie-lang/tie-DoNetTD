@@ -33,6 +33,13 @@ internal sealed class TieWriter
                 w._sb.Append('\n');
             }
         }
+        // td 可选表名形态：EmitTableName 开启且有有效表名（选项优先，否则取文档自身）时
+        // 输出「表名 = 」前缀。紧凑/美化模式行为一致。
+        var tableName = opt.TableName ?? document.TableName;
+        if (opt.EmitTableName && tableName is string name)
+        {
+            w._sb.Append(name).Append(" = ");
+        }
         w.WriteValue(document.Root);
         if (opt.Pretty)
         {
